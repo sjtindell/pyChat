@@ -3,15 +3,13 @@
 import socket
 
 host = 'localhost'
-port = 5000
-size = 1024
+port = 9091
+size = 4096
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s = socket.socket()
 s.connect((host, port))
 
-string = raw_input('> ')
+string = input('> ').encode()
 
 s.send(string)
-data = s.recv(size)
-print 'response:', data
 s.close()

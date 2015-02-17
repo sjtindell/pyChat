@@ -12,9 +12,8 @@ s.bind((host, port))
 s.listen(backlog)
 
 while True:
-	client, address = s.accept()
-	data = client.recv(size)
-	if data:
-		client.send(data)
-        print 'recieved/served string:', data
-	client.close()
+    client, address = s.accept()
+    data = client.recv(size)
+    data.decode('utf-8')
+    print('received data:', data)
+    client.close()

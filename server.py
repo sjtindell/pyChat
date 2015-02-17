@@ -1,81 +1,68 @@
- 
-import sys
-import socket
 import select
+import socket
+import sys
 
-SOCKET_LIST = []
-RECV_BUFFER = 4096 
-HOST = '' 
-PORT = 9091 # choose
 
-def chat_server():
+class ChatServer(object):
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind((HOST, PORT))
-    server_socket.listen(10) # num of conns to accept
- 
-    SOCKET_LIST.append(server_socket)
- 
-    print "Chat server started on port " + str(PORT)
- 
-    while True:
+    # buffer defines size needed to receive data
+    # backlog defines max connections
+    def __init__(self, port=9091, buffer=4096, backlog=5):
 
-        # get the list sockets which are ready to be read through select
-        # 4th arg, time_out  = 0 : poll and never block
-        ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
-      
-        for sock in ready_to_read:
-            # a new connection request recieved
-            if sock == server_socket: 
-                sockfd, addr = server_socket.accept()
-                SOCKET_LIST.append(sockfd)
-                print "Client (%s, %s) connected" % addr
-                 
-                broadcast(server_socket, sockfd, "[%s:%s] entered our chatting room\n" % addr)
-             
-            # a message from a client, not a new connection
-            else:
-                # process data recieved from client, 
+        self.host = ''
+        self.port = port
+        self.socket_list = []
+        self.buffer = buffer
+        self.backlog = backlog
+        self.server_socket = None
+
+    def start(self):
+        s = socket.socket()                                                 # AF_INET and SOCK_STREAM are socket defaults
+        s.bind((self.host, self.port))
+        s.listen(self.backlog)
+
+        self.socket_list.append(s)                                          # ?
+        self.server_socket = s
+        print('chat server started on port', self.port)
+
+    def broadcast(self, peer, text):
+        for port in self.socket_list:
+            if port not in (self.server_socket, peer):
                 try:
-                    # receiving data from the socket.
-                    data = sock.recv(RECV_BUFFER)
+                    port.send(text)
+                except port.error as e:
+                    print('error:', e)
+                    port.close()
+                    self.socket_list.remove(port)
+
+    # def client_handler(self):
+    #     s = self.server_socket
+    #     while True:
+    #         client, address = s.accept()
+    #         data = client.recv(self.buffer)
+    #         data.decode('utf-8')
+    #         print('received data: ', data)
+    #         client.close()
+
+    def client_handler(self):
+        s = self.server_socket
+
+        while True:
+            to_read, to_write, errors = select.select(self.socket_list, [], [], 0)  # 0 timeout, poll never block
+            for connection in to_read:
+                if connection == s:
+                    client, address = s.accept()
+                    self.socket_list.append(client)
+                    print(address, 'connected')
+                else:
+                    data = connection.recv(self.buffer)
                     if data:
-                        # there is something in the socket
-                        broadcast(server_socket, sock, "\r" + '[' + str(sock.getpeername()) + '] ' + data)  
+                        self.broadcast('\r' + '[' + str(connection.getpeername()) + ']', data)
                     else:
-                        # remove the socket that's broken    
-                        if sock in SOCKET_LIST:
-                            SOCKET_LIST.remove(sock)
+                        self.socket_list.remove(connection)
 
-                        # at this stage, no data means probably the connection has been broken
-                        broadcast(server_socket, sock, "Client (%s, %s) is offline\n" % addr) 
-
-                # exception 
-                except:
-                    broadcast(server_socket, sock, "Client (%s, %s) is offline\n" % addr)
-                    continue
-
-    server_socket.close()
-
-    
-# broadcast chat messages to all connected clients
-def broadcast (server_socket, sock, message):
-    for socket in SOCKET_LIST:
-        # send the message only to peer
-        if socket != server_socket and socket != sock :
-            try :
-                socket.send(message)
-            except :
-                # broken socket connection
-                socket.close()
-                # broken socket, remove it
-                if socket in SOCKET_LIST:
-                    SOCKET_LIST.remove(socket)
-
- 
-if __name__ == "__main__":
-	sys.exit(chat_server())
+    def stop(self):
+        pass
 
 
-         
+
