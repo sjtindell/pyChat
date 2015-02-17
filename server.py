@@ -46,7 +46,7 @@ class ChatServer(object):
                     data = connection.recv(self.buffer)
                     if data:
                         ip, port = connection.getpeername()
-                        self.broadcast(connection, '\r' + '[' + ip + ']' + data.decode())
+                        self.broadcast(connection, '\r' + '[' + ip + '] ' + data.decode())
                     else:
                         connection.close()
                         self.socket_list.remove(connection)

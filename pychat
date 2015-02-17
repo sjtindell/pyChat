@@ -10,5 +10,6 @@ if sys.argv[1] == 'server' and sys.argv[2] == 'start':
 	server.client_handler()
 
 elif sys.argv[1] == 'client' and sys.argv[2] == 'start':
-	client = client.ChatClient()
+	username = input('username: ')
+	client = client.ChatClient(user=username)
 	client.start()	

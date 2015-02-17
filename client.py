@@ -5,11 +5,12 @@ import sys
 
 class ChatClient(object):
 
-    def __init__(self, host='localhost', port=51515, buffer=4096):
+    def __init__(self, host='localhost', port=51515, buffer=4096, user='Me'):
         self.host = host
        	self.port = port
         self.buffer = buffer
         self.socket = None
+        self.user = user
 
     def start(self):
         self.socket = socket.socket()
@@ -18,7 +19,7 @@ class ChatClient(object):
         try:
             self.socket.connect((self.host, self.port))
             print('Connected to remote host.')
-            sys.stdout.write('[Me] ')
+            sys.stdout.write('[' + self.user + '] ')
             sys.stdout.flush()
         except Exception as e:
             print('Connection failed:', e)
@@ -37,13 +38,13 @@ class ChatClient(object):
                     else:
                         data = data.decode()
                         sys.stdout.write(data)
-                        sys.stdout.write('[Me] ')
+                        sys.stdout.write('[' + self.user + '] ')
                         sys.stdout.flush()
                 else:
                     msg = sys.stdin.readline()
                     msg = msg.encode('utf-8')
                     self.socket.send(msg)
-                    sys.stdout.write('[Me] ')
+                    sys.stdout.write('[' + self.user + '] ')
                     sys.stdout.flush()
 
 
