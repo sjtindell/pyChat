@@ -13,6 +13,7 @@ class ChatServer(object):
         self.buffer = buffer
         self.backlog = backlog
         self.server_socket = None
+        self.unames = {}
 
     def start(self):
         s = socket.socket()                                               
@@ -38,15 +39,19 @@ class ChatServer(object):
             to_read, to_write, errors = select.select(self.socket_list, [], [], 0) 
             for connection in to_read:
                 if connection == self.server_socket:
-                    client, address = self.server_socket.accept()  # socket not client
+                    client, address = self.server_socket.accept()
                     self.socket_list.append(client)
                     print(address, 'connected')
                     self.broadcast(client, '{0} entered the room\n'.format(address[0]))
                 else:
-                    data = connection.recv(self.buffer)
-                    if data:
+                    data = connection.recv(self.buffer).decode()
+                    if data and data[:5] == 'uname':
+                        ip, port = connection.getpeername() 
+                        self.unames[ip] = data[6:]
+                        print('stored', ip, 'as user', data[6:])
+                    elif data:
                         ip, port = connection.getpeername()
-                        self.broadcast(connection, '\r' + '[' + ip + '] ' + data.decode())
+                        self.broadcast(connection, '\r' + '[' + self.unames[ip] + '] ' + data)
                     else:
                         connection.close()
                         self.socket_list.remove(connection)
