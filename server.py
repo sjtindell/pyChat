@@ -5,11 +5,9 @@ import sys
 
 class ChatServer(object):
 
-    # buffer defines size needed to receive data
-    # backlog defines max connections
-    def __init__(self, port=9091, buffer=4096, backlog=5):
+    def __init__(self, port=51515, buffer=4096, backlog=5):
 
-        self.host = ''
+        self.host = '0.0.0.0'
         self.port = port
         self.socket_list = []
         self.buffer = buffer
@@ -17,23 +15,14 @@ class ChatServer(object):
         self.server_socket = None
 
     def start(self):
-        s = socket.socket()                                                 # AF_INET and SOCK_STREAM are socket defaults
+        s = socket.socket()                                               
         s.bind((self.host, self.port))
         s.listen(self.backlog)
 
-        self.socket_list.append(s)                                          # ?
+        self.socket_list.append(s)                                      
         self.server_socket = s
         print('chat server started on port', self.port)
 
-    def broadcast(self, peer, text):
-        for port in self.socket_list:
-            if port not in (self.server_socket, peer):
-                try:
-                    port.send(text)
-                except port.error as e:
-                    print('error:', e)
-                    port.close()
-                    self.socket_list.remove(port)
 
     # def client_handler(self):
     #     s = self.server_socket
@@ -45,24 +34,33 @@ class ChatServer(object):
     #         client.close()
 
     def client_handler(self):
-        s = self.server_socket
-
         while True:
-            to_read, to_write, errors = select.select(self.socket_list, [], [], 0)  # 0 timeout, poll never block
+            to_read, to_write, errors = select.select(self.socket_list, [], [], 0) 
             for connection in to_read:
-                if connection == s:
-                    client, address = s.accept()
+                if connection == self.server_socket:
+                    client, address = self.server_socket.accept()  # socket not client
                     self.socket_list.append(client)
                     print(address, 'connected')
+                    self.broadcast(client, '{0} entered the room\n'.format(address[0]))
                 else:
                     data = connection.recv(self.buffer)
                     if data:
-                        self.broadcast('\r' + '[' + str(connection.getpeername()) + ']', data)
+                        ip, port = connection.getpeername()
+                        self.broadcast(connection, '\r' + '[' + ip + ']' + data.decode())
                     else:
+                        connection.close()
                         self.socket_list.remove(connection)
-
-    def stop(self):
-        pass
+    
+    def broadcast(self, peer, text):
+        for port in self.socket_list:
+            if port not in (self.server_socket, peer):
+                try:
+                    text = text.encode()
+                    port.send(text)
+                except port.error as e:
+                    print('error:', e)
+                    port.close()
+                    self.socket_list.remove(port)
 
 
 
