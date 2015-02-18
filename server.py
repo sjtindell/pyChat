@@ -14,6 +14,9 @@ class ChatServer(object):
         self.backlog = backlog
         self.server_socket = None
         self.unames = {}
+        
+        self.start()
+        self.client_handler()
 
     def start(self):
         s = socket.socket()                                               

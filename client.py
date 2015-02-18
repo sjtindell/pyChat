@@ -1,16 +1,19 @@
 import select
 import socket
 import sys
-
+from random import randint
 
 class ChatClient(object):
 
-    def __init__(self, host='localhost', port=51515, buffer=4096, user=''):
+    def __init__(self, host='localhost', port=51515, 
+                 buffer=4096, user='user{0}'.format(randint(1, 1000))):
         self.host = host
        	self.port = port
         self.buffer = buffer
         self.socket = None
         self.user = user
+
+        self.start()
 
     def start(self):
         self.socket = socket.socket()
