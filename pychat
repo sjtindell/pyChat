@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import argparse
+#import argparse
 import sys
 import client
 import server
@@ -21,7 +21,7 @@ if sys.argv[1] == 'server':
     server.ChatServer()
 
 elif sys.argv[1] == 'client':
-    client.ChatClient(host=argv[2], user=arg[3])
+    client.ChatClient(host=sys.argv[2], user=sys.argv[3])
 
 
 # parser = argparse.ArgumentParser(usage=usage)
