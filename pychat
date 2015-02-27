@@ -24,7 +24,7 @@ if argv[1] == 'server':
 
 elif argv[1] == 'client':
     try:
-        client.ChatClient(host=argv[2], port=argv[3], user=argv[4])
+        client.ChatClient(host=argv[2], port=int(argv[3]), user=argv[4])
     except IndexError:
         client.ChatClient()
 
