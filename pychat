@@ -1,61 +1,32 @@
 #! /usr/bin/env python
 
-import argparse
-import sys
+from sys import argv
 import client
 import server
 
 
 usage = '''start server, connect clients
+
 server default: port=51515, backlog=10
 client default: host=localhost, port=51515, user=userX
 set buffer in client/server.py, default 4096
-ex.)
-pychat server -p 9091 -b 10
-pychat client -h <host ip> -p 9091 -u bob'''
+
+examples:
+pychat server <port>
+pychat client <host-ip> <port> <username>'''
 
 
-parser = argparse.ArgumentParser(usage=usage)
+if argv[1] == 'server':
+    try:
+        server.ChatServer(port=argv[2])
+    except IndexError:
+        server.ChatServer()
 
-parser.add_argument('first', type=str, nargs='?', choices=['server', 'client'],
-					help='start the server with defaults')
+elif argv[1] == 'client':
+    try:
+        client.ChatClient(host=argv[2], port=argv[3], user=argv[4])
+    except IndexError:
+        client.ChatClient()
 
-parser.add_argument('-b', '--backlog', type=int, nargs='*', dest='backlog',
-					help='specify a buffer amount')
-
-parser.add_argument('-p', '--port', type=int, nargs='*', dest='port',
-					help='specify port number')
-
-parser.add_argument('-H', '--host', nargs='*', dest='host',
-					help='specify a host for the client')
-
-parser.add_argument('-u', '--user', type=str, nargs='*', dest='user',
-					help='specify a username for the client')
-
-args = parser.parse_args()
-
-
-if args.first == 'server':
-	print(args)
-	if not args.port and not args.backlog:
-		server.ChatServer()
-	elif args.port and not args.backlog:
-		server.ChatServer(port=args.port)
-	elif args.backlog and not args.port:
-		server.ChatServer(backlog=args.backlog)
-	elif args.port and args.backlog:
-		server.ChatServer(port=args.port, backlog=args.backlog)
-
-elif args.first == 'client':
-	print(args)
-	if not args.port and not args.host and not args.user:
-		client.ChatClient()
-	elif args.port and not args.host and not args.user:
-		client.ChatClinet(port=args.port)
-	elif args.port and args.host and not args.user:
-		client.ChatClient(port=args.port, host=args.host)
-	elif args.port and args.host and args.user:
-		client.ChatClient(port=args.port, host=args.host, user=args.user)
-	elif args.user and not args.port and not args.host:
-		client.ChatClient(user=args.user)
-
+elif argv[1] == '-h':
+    print(usage)
