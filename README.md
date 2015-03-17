@@ -1,5 +1,5 @@
 # pyChat
-Python. CLI chat server/client handling multiple connections.
+CLI chat server/client handling multiple connections.
 
 ToDo:
 - gui to stop overwriting
